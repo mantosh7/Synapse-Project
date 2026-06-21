@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String?    
+  googleId  String?    @unique @map("google_id") 
+  avatar    String?    // Google profile picture
+  createdAt DateTime   @default(now()) @map("created_at")
+  documents Document[]
+
+  @@map("users")
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  fileName  String   @map("file_name")
+  filePath  String   @map("file_path")
+  fileSize  Int?     @map("file_size")
+  status    String   @default("processing")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks    Chunk[]
+
+  @@map("documents")
+}
+
+model Chunk {
+  id         String     @id @default(uuid())
+  docId      String     @map("doc_id")
+  content    String
+  pageNumber Int?       @map("page_number")
+  chunkIndex Int?       @map("chunk_index")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  document   Document   @relation(fields: [docId], references: [id], onDelete: Cascade)
+  embedding  Embedding?
+
+  @@map("chunks")
+}
+
+model Embedding {
+  id        String   @id @default(uuid())
+  chunkId   String   @unique @map("chunk_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  chunk     Chunk    @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@map("embeddings")
+}
