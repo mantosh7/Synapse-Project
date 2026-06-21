@@ -48,10 +48,11 @@ model Chunk {
 }
 
 model Embedding {
-  id        String   @id @default(uuid())
-  chunkId   String   @unique @map("chunk_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  chunk     Chunk    @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  id        String                        @id @default(uuid())
+  chunkId   String                        @unique @map("chunk_id")
+  embedding Unsupported("vector(1024)")?
+  createdAt DateTime                      @default(now()) @map("created_at")
+  chunk     Chunk                         @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
   @@map("embeddings")
 }

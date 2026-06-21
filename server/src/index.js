@@ -7,7 +7,9 @@ import { dirname, join } from 'path'
 
 import { connectDB } from './config/db.js'
 import errorHandler from './middlewares/errorHandler.js'
-import authRoutes from './routes/auth.routes.js'
+import authRoutes from './routes/authRoutes.js'
+import documentRoutes from './routes/documentRoutes.js'
+import searchRoutes from './routes/searchRoutes.js'
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -19,14 +21,18 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', 
-  credentials: true                
+  origin: 'http://localhost:5173',
+  credentials: true
 }))
 app.use(express.json())
-app.use(cookieParser())   
+app.use(cookieParser())
 
 // auth route
 app.use('/api/auth', authRoutes)
+
+// routes
+app.use('/api/documents', documentRoutes)
+app.use('/api/search', searchRoutes)
 
 // error handler
 app.use(errorHandler)
