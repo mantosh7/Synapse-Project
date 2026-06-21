@@ -5,70 +5,73 @@ import { extractText } from 'unpdf'
 import fs from 'fs'
 import AppError from '../middlewares/AppError.js'
 
-// Upload and process PDF — full pipeline
+// upload and process PDF — full pipeline
 const uploadDocument = async (file, userId) => {
-    // Step 1 — Extract text from PDF
-    const pdfBuffer = fs.readFileSync(file.path)
-    const { text } = await extractText(new Uint8Array(pdfBuffer))
-    const extractedText = text.join(' ')
+    try {
+        // extract text from PDF
+        const pdfBuffer = fs.readFileSync(file.path)
+        const { text } = await extractText(new Uint8Array(pdfBuffer))
+        const extractedText = text.join(' ')
 
-    if (!extractedText || extractedText.trim().length === 0) {
-        throw new AppError('Could not extract text from PDF', 400)
-    }
-
-    // Step 2 — Save document record in database
-    const document = await prisma.document.create({
-        data: {
-            userId,
-            fileName: file.originalname,
-            filePath: file.path,
-            fileSize: file.size,
-            status: 'processing'
+        if (!extractedText || extractedText.trim().length === 0) {
+            throw new AppError('Could not extract text from PDF', 400)
         }
-    })
 
-    // Step 3 — Split text into chunks
-    const chunks = chunkText(extractedText)
-
-    // Step 4 — For each chunk: save + generate embedding + store vector
-    for (const chunk of chunks) {
-        // Save chunk in database
-        const savedChunk = await prisma.chunk.create({
+        // save document record in database
+        const document = await prisma.document.create({
             data: {
-                docId: document.id,
-                content: chunk.content,
-                chunkIndex: chunk.chunkIndex
+                userId,
+                fileName: file.originalname,
+                filePath: file.path,
+                fileSize: file.size,
+                status: 'processing'
             }
         })
 
-        // Generate embedding for chunk
-        const embedding = await generateEmbedding(chunk.content)
+        // split text into chunks
+        const chunks = chunkText(extractedText)
 
-        // Store embedding vector using raw SQL — pgvector
-        await prisma.$executeRaw`
-      INSERT INTO embeddings (id, chunk_id, embedding)
-      VALUES (gen_random_uuid(), ${savedChunk.id}, ${JSON.stringify(embedding)}::vector)
-    `
-    }
+        // for each chunk: save + generate embedding + store vector
+        for (const chunk of chunks) {
+            const savedChunk = await prisma.chunk.create({
+                data: {
+                    docId: document.id,
+                    content: chunk.content,
+                    chunkIndex: chunk.chunkIndex
+                }
+            })
 
-    // Step 5 — Update document status to done
-    await prisma.document.update({
-        where: { id: document.id },
-        data: { status: 'completed' }
-    })
+            // generate embedding for chunk
+            const embedding = await generateEmbedding(chunk.content)
 
-    // Clean up uploaded file from disk
-    fs.unlinkSync(file.path)
+            // store embedding vector using raw SQL — pgvector
+            await prisma.$executeRaw`
+            INSERT INTO embeddings (id, chunk_id, embedding)
+            VALUES (gen_random_uuid(), ${savedChunk.id}, ${JSON.stringify(embedding)}::vector)
+            `
+        }
 
-    return {
-        id: document.id,
-        fileName: document.fileName,
-        totalChunks: chunks.length,
-        status: 'completed'
+        // update document status to completed
+        await prisma.document.update({
+            where: { id: document.id },
+            data: { status: 'completed' }
+        })
+
+        return {
+            id: document.id,
+            fileName: document.fileName,
+            totalChunks: chunks.length,
+            status: 'completed'
+        }
+    } finally {
+        //  delete uploaded file
+        if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path)
+        }
     }
 }
 
-// Get all documents for a user
+// get all documents for a user
 const getUserDocuments = async (userId) => {
     const documents = await prisma.document.findMany({
         where: { userId },
@@ -88,7 +91,7 @@ const getUserDocuments = async (userId) => {
     return documents
 }
 
-// Delete a document and all its chunks + embeddings
+// delete a document and all its chunks + embeddings
 const deleteDocument = async (documentId, userId) => {
     const document = await prisma.document.findUnique({
         where: { id: documentId }
@@ -98,12 +101,11 @@ const deleteDocument = async (documentId, userId) => {
         throw new AppError('Document not found', 404)
     }
 
-    // Make sure user owns this document
     if (document.userId !== userId) {
         throw new AppError('Not authorized', 403)
     }
 
-    // Cascade delete — chunks + embeddings automatically deleted
+    // cascade delete — chunks + embeddings automatically deleted
     await prisma.document.delete({
         where: { id: documentId }
     })

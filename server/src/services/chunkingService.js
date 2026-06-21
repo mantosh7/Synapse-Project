@@ -8,7 +8,6 @@ const chunkText = (text, chunkSize = 500, overlap = 50) => {
     let i = 0
 
     while (i < words.length) {
-        // Take chunkSize words
         const chunkWords = words.slice(i, i + chunkSize)
         const chunkContent = chunkWords.join(' ')
 
@@ -19,12 +18,10 @@ const chunkText = (text, chunkSize = 500, overlap = 50) => {
             })
         }
 
-        // Move forward by chunkSize minus overlap
         // Overlap ensures context is not lost between chunks
         i += chunkSize - overlap
     }
 
-    // console.log(chunks) ;
     return chunks
 }
 

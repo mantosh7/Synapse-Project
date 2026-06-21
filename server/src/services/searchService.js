@@ -5,13 +5,13 @@ import AppError from '../middlewares/AppError.js'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-// Search relevant chunks and generate answer
+// search relevant chunks and generate answer
 const searchDocuments = async (query, userId) => {
-  // Step 1 — Generate embedding for user query
-  const queryEmbedding = await generateEmbedding(query)
+    // generate embedding for user query
+    const queryEmbedding = await generateEmbedding(query)
 
-  // Step 2 — Find similar chunks using pgvector cosine similarity
-  const similarChunks = await prisma.$queryRaw`
+    // find similar chunks using pgvector cosine similarity
+    const similarChunks = await prisma.$queryRaw`
     SELECT 
       c.id,
       c.content,
@@ -26,45 +26,45 @@ const searchDocuments = async (query, userId) => {
     LIMIT 5
   `
 
-  if (!similarChunks || similarChunks.length === 0) {
-    throw new AppError('No relevant documents found', 404)
-  }
+    if (!similarChunks || similarChunks.length === 0) {
+        throw new AppError('No relevant documents found', 404)
+    }
 
-  // Step 3 — Prepare context from chunks
-  const context = similarChunks
-    .map((chunk, i) => `[Source ${i + 1} — ${chunk.file_name}]\n${chunk.content}`)
-    .join('\n\n')
+    // prepare context from chunks
+    const context = similarChunks
+        .map((chunk, i) => `[Source ${i + 1} — ${chunk.file_name}]\n${chunk.content}`)
+        .join('\n\n')
 
-  // Step 4 — Generate answer using Groq LLM
-  const response = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a helpful assistant. Answer the user's question based ONLY on the provided context. 
-If the answer is not in the context, say "I couldn't find relevant information in your documents."
-Always mention which source you used.`
-      },
-      {
-        role: 'user',
-        content: `Context:\n${context}\n\nQuestion: ${query}`
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 1000
-  })
+    // generate answer using Groq LLM
+    const response = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+            {
+                role: 'system',
+                content: `You are a helpful assistant. Answer the user's question based ONLY on the provided context. 
+                        If the answer is not in the context, say "I couldn't find relevant information in your documents."
+                        Always mention which source you used.`
+            },
+            {
+                role: 'user',
+                content: `Context:\n${context}\n\nQuestion: ${query}`
+            }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+    })
 
-  const answer = response.choices[0].message.content
+    const answer = response.choices[0].message.content
 
-  // Step 5 — Return answer with sources
-  return {
-    answer,
-    sources: similarChunks.map(chunk => ({
-      fileName: chunk.file_name,
-      content: chunk.content.substring(0, 200),
-      similarity: parseFloat(chunk.similarity).toFixed(3)
-    }))
-  }
+    // return answer with sources
+    return {
+        answer,
+        sources: similarChunks.map(chunk => ({
+            fileName: chunk.file_name,
+            content: chunk.content.substring(0, 200),
+            similarity: parseFloat(chunk.similarity).toFixed(3)
+        }))
+    }
 }
 
 export { searchDocuments }

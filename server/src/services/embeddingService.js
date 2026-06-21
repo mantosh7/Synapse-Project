@@ -2,7 +2,7 @@ import AppError from '../middlewares/AppError.js'
 
 const COHERE_API_KEY = process.env.COHERE_API_KEY
 
-// Convert text to vector using Cohere
+// convert text to vector using Cohere
 const generateEmbedding = async (text) => {
   const response = await fetch('https://api.cohere.com/v2/embed', {
     method: 'POST',
