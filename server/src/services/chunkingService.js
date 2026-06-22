@@ -1,5 +1,5 @@
 // Split text into overlapping chunks for better search results
-const chunkText = (text, chunkSize = 500, overlap = 50) => {
+const chunkText = (text, chunkSize = 300, overlap = 50) => {
     // Clean text — remove extra whitespace
     const cleanText = text.replace(/\s+/g, ' ').trim()
 
@@ -17,7 +17,7 @@ const chunkText = (text, chunkSize = 500, overlap = 50) => {
                 chunkIndex: chunks.length
             })
         }
-
+        
         // Overlap ensures context is not lost between chunks
         i += chunkSize - overlap
     }
