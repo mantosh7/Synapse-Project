@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String
-  email     String     @unique
-  password  String?    
-  googleId  String?    @unique @map("google_id") 
-  avatar    String?    // Google profile picture
-  createdAt DateTime   @default(now()) @map("created_at")
-  documents Document[]
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password      String?    
+  googleId      String?    @unique @map("google_id") 
+  avatar        String?    // Google profile picture
+  createdAt     DateTime   @default(now()) @map("created_at")
+  documents     Document[]
+  searchHistory SearchHistory[]
 
   @@map("users")
 }
@@ -55,4 +56,15 @@ model Embedding {
   chunk     Chunk                         @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
   @@map("embeddings")
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  query     String
+  answer    String
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("search_history")
 }

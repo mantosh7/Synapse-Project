@@ -78,6 +78,15 @@ const searchDocuments = async (query, userId) => {
 
   const answer = response.choices[0].message.content
 
+  // Save search history
+  await prisma.searchHistory.create({
+    data: {
+      userId,
+      query,
+      answer
+    }
+  })
+
   // return the final answer along with source metadata for the UI
   return {
     answer,
@@ -89,4 +98,44 @@ const searchDocuments = async (query, userId) => {
   }
 }
 
-export { searchDocuments }
+
+// get search history for a user
+const getSearchHistory = async (userId) => {
+  const history = await prisma.searchHistory.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 20, // last 20 queries
+    select: {
+      id: true,
+      query: true,
+      answer: true,
+      createdAt: true
+    }
+  })
+
+  return history
+}
+
+
+// Delete a search history item
+const deleteSearchHistory = async (historyId, userId) => {
+  const history = await prisma.searchHistory.findUnique({
+    where: { id: historyId }
+  })
+
+  if (!history) {
+    throw new AppError('History not found', 404)
+  }
+
+  if (history.userId !== userId) {
+    throw new AppError('Not authorized', 403)
+  }
+
+  await prisma.searchHistory.delete({
+    where: { id: historyId }
+  })
+
+  return { message: 'History deleted successfully' }
+}
+
+export { searchDocuments, getSearchHistory, deleteSearchHistory }

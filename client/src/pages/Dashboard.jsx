@@ -11,6 +11,8 @@ const Dashboard = () => {
   const [sources, setSources] = useState([])
   const [uploading, setUploading] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [history, setHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
   const [error, setError] = useState(null)
 
   // Fetch user and documents on mount
@@ -22,6 +24,9 @@ const Dashboard = () => {
 
         const docsRes = await api.get('/api/documents')
         setDocuments(docsRes.data.data.documents)
+
+        const historyRes = await api.get('/api/search/history')
+        setHistory(historyRes.data.data.history)
       } catch (err) {
         navigate('/')
       }
@@ -67,6 +72,15 @@ const Dashboard = () => {
     }
   }
 
+  const handleDeleteHistory = async (historyId) => {
+    try {
+      await api.delete(`/api/search/history/${historyId}`)
+      setHistory(history.filter(h => h.id !== historyId))
+    } catch (err) {
+      console.error('Delete history failed')
+    }
+  }
+
   // Handle search
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -81,6 +95,9 @@ const Dashboard = () => {
       const res = await api.post('/api/search', { query })
       setAnswer(res.data.data.answer)
       setSources(res.data.data.sources)
+
+      const historyRes = await api.get('/api/search/history')
+      setHistory(historyRes.data.data.history)
     } catch (err) {
       setError(err.response?.data?.message || 'Search failed')
     } finally {
@@ -180,6 +197,52 @@ const Dashboard = () => {
                   </button>
                 </div>
               ))
+            )}
+          </div>
+
+          {/* Search History */}
+          <div className='mt-4'>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className='w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-2'
+            >
+              <span>Search History</span>
+              <span>{showHistory ? '▲' : '▼'}</span>
+            </button>
+
+            {showHistory && (
+              <div className='flex flex-col gap-2'>
+                {history.length === 0 ? (
+                  <p className='text-xs text-gray-400 text-center'>
+                    No search history yet
+                  </p>
+                ) : (
+                  history.map(item => (
+                    <div
+                      key={item.id}
+                      className='bg-gray-50 rounded-lg p-2 flex items-start justify-between gap-2 cursor-pointer hover:bg-blue-50 transition'
+                      onClick={() => {
+                        setQuery(item.query)
+                        setAnswer(item.answer)
+                        setSources([])
+                      }}
+                    >
+                      <p className='text-xs text-gray-600 truncate flex-1'>
+                        {item.query}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteHistory(item.id)
+                        }}
+                        className='text-xs text-red-400 hover:text-red-600 shrink-0'
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
           </div>
         </aside>
