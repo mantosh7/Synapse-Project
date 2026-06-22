@@ -1,28 +1,48 @@
-// Split text into overlapping chunks for better search results
-const chunkText = (text, chunkSize = 300, overlap = 50) => {
-    // Clean text — remove extra whitespace
-    const cleanText = text.replace(/\s+/g, ' ').trim()
+// split text into sentence-aware overlapping chunks for better retrieval
+const chunkText = (text, maxWords = 300, overlapSentences = 2) => {
+  // normalize whitespace and clean extracted text
+  const cleanText = text
+    .replace(/\s+/g, ' ')        // multiple spaces remove
+    .replace(/\n+/g, ' ')        // newlines remove
+    .trim()
 
-    const words = cleanText.split(' ')
-    const chunks = []
-    let i = 0
+  // split text into sentences while preserving sentence boundaries
+  const sentences = cleanText.match(/[^.!?]+[.!?]+[\s]*/g) || [cleanText]
 
-    while (i < words.length) {
-        const chunkWords = words.slice(i, i + chunkSize)
-        const chunkContent = chunkWords.join(' ')
+  const chunks = []
+  let currentChunk = []
+  let currentWordCount = 0
 
-        if (chunkContent.trim()) {
-            chunks.push({
-                content: chunkContent,
-                chunkIndex: chunks.length
-            })
-        }
-        
-        // Overlap ensures context is not lost between chunks
-        i += chunkSize - overlap
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i].trim()
+    const sentenceWordCount = sentence.split(' ').length
+
+    // save the current chunk once it reaches the size limit
+    if (currentWordCount + sentenceWordCount > maxWords && currentChunk.length > 0) {
+      chunks.push({
+        content: currentChunk.join(' '),
+        chunkIndex: chunks.length
+      })
+
+      // preserve the last few sentences to maintain context continuity
+      const overlapStart = Math.max(0, currentChunk.length - overlapSentences)
+      currentChunk = currentChunk.slice(overlapStart)
+      currentWordCount = currentChunk.join(' ').split(' ').length
     }
 
-    return chunks
+    currentChunk.push(sentence)
+    currentWordCount += sentenceWordCount
+  }
+
+  // save any remaining content as the final chunk
+  if (currentChunk.length > 0) {
+    chunks.push({
+      content: currentChunk.join(' '),
+      chunkIndex: chunks.length
+    })
+  }
+
+  return chunks
 }
 
 export { chunkText }
