@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Network } from 'lucide-react'
+import AnswerRenderer from '../components/AnswerRenderer'
 import api from '../services/api.js'
 
 const Dashboard = () => {
@@ -127,7 +128,7 @@ const Dashboard = () => {
           <span className='text-sm font-medium text-[#e2e2e2]'>{user.name}</span>
           <button
             onClick={handleLogout}
-            className='text-sm font-medium text-[#c7c7c7] hover:text-red-400 transition-colors duration-200'
+            className='text-sm font-medium text-white hover:text-red-400 transition-colors duration-200'
           >
             Logout
           </button>
@@ -246,7 +247,7 @@ const Dashboard = () => {
         </aside>
 
         {/* Main */}
-        <main className='flex-1 flex flex-col overflow-hidden'>
+        <main className='flex-1 flex flex-col overflow-hidden mr-32 ml-32'>
 
           {/* Search Bar */}
           <div className='p-8 border-b border-[#303030]'>
@@ -277,9 +278,7 @@ const Dashboard = () => {
                 <p className='text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3'>
                   Answer
                 </p>
-                <p className='text-sm text-[#e8e8e8] leading-relaxed whitespace-pre-wrap'>
-                  {answer}
-                </p>
+                <AnswerRenderer content={answer} />
               </div>
             )}
 
@@ -299,11 +298,11 @@ const Dashboard = () => {
                         <p className='text-xs font-medium text-teal-400 truncate'>
                           {source.fileName}
                         </p>
-                        <span className='text-xs text-gray-500 ml-3 shrink-0'>
+                        <span className='text-xs text-[#d4d4d4] ml-3 shrink-0'>
                           {Math.round(source.similarity * 100)}% match
                         </span>
                       </div>
-                      <p className='text-xs text-gray-500 leading-relaxed'>
+                      <p className='text-xs text-[#a0a0a0] leading-relaxed'>
                         {source.content}...
                       </p>
                     </div>
