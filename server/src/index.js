@@ -21,7 +21,14 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: (origin, callback) => {
+    const allowedOrigin = process.env.CLIENT_URL?.replace(/\/$/, '')
+    if (!origin || origin.replace(/\/$/, '') === allowedOrigin) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true
 }))
 app.use(express.json())
