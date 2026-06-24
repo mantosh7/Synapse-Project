@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FileText, Network } from 'lucide-react'
 import api from '../services/api.js'
 
 const Dashboard = () => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [documents, setDocuments] = useState([])
   const [query, setQuery] = useState('')
   const [answer, setAnswer] = useState(null)
@@ -15,16 +17,13 @@ const Dashboard = () => {
   const [showHistory, setShowHistory] = useState(false)
   const [error, setError] = useState(null)
 
-  // Fetch user and documents on mount
   useEffect(() => {
     const init = async () => {
       try {
         const userRes = await api.get('/api/auth/me')
         setUser(userRes.data.data.user)
-
         const docsRes = await api.get('/api/documents')
         setDocuments(docsRes.data.data.documents)
-
         const historyRes = await api.get('/api/search/history')
         setHistory(historyRes.data.data.history)
       } catch (err) {
@@ -34,35 +33,27 @@ const Dashboard = () => {
     init()
   }, [navigate])
 
-  // Handle PDF upload
   const handleUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-
     setUploading(true)
     setError(null)
-
     try {
       const formData = new FormData()
       formData.append('pdf', file)
-
       await api.post('/api/documents', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-
-      // Refresh documents list
       const docsRes = await api.get('/api/documents')
       setDocuments(docsRes.data.data.documents)
     } catch (err) {
       setError(err.response?.data?.message || 'Upload failed')
     } finally {
       setUploading(false)
-      // Reset file input
       e.target.value = ''
     }
   }
 
-  // Handle document delete
   const handleDelete = async (docId) => {
     try {
       await api.delete(`/api/documents/${docId}`)
@@ -81,21 +72,17 @@ const Dashboard = () => {
     }
   }
 
-  // Handle search
   const handleSearch = async (e) => {
     e.preventDefault()
     if (!query.trim()) return
-
     setSearching(true)
     setAnswer(null)
     setSources([])
     setError(null)
-
     try {
       const res = await api.post('/api/search', { query })
       setAnswer(res.data.data.answer)
       setSources(res.data.data.sources)
-
       const historyRes = await api.get('/api/search/history')
       setHistory(historyRes.data.data.history)
     } catch (err) {
@@ -105,32 +92,42 @@ const Dashboard = () => {
     }
   }
 
-  // Handle logout
   const handleLogout = async () => {
     await api.post('/api/auth/logout')
     navigate('/')
   }
 
   if (!user) return (
-    <div className='min-h-screen flex items-center justify-center'>
-      <p className='text-gray-500 text-sm'>Loading...</p>
+    <div className='min-h-screen flex items-center justify-center bg-gray-900'>
+      <p className='text-gray-400 text-sm'>Loading...</p>
     </div>
   )
 
   return (
-    <div className='min-h-screen bg-gray-50 flex flex-col'>
+    <div className='min-h-screen bg-[#1a1a1a] text-[#e8e8e8] flex flex-col'>
 
       {/* Navbar */}
-      <nav className='bg-white border-b px-6 py-3 flex items-center justify-between'>
-        <h1 className='text-lg font-bold text-blue-600'>Synapse</h1>
+      <nav className='bg-[#212121] border-b border-[#383838] px-6 py-4 flex items-center justify-between'>
         <div className='flex items-center gap-3'>
-          {user.avatar && (
-            <img src={user.avatar} alt={user.name} className='w-8 h-8 rounded-full' />
-          )}
-          <span className='text-sm text-gray-600'>{user.name}</span>
+          <div className="w-10 h-10 bg-[#0d9488] rounded-lg flex items-center justify-center">
+            <Network className="w-5 h-5 text-white" />
+          </div>
+          <span className='text-white font-semibold text-base'>Synapse</span>
+        </div>
+
+        <div className='flex items-center gap-4 mr-8'>
+          {user.avatar
+            ? <img src={user.avatar} alt={user.name} className='w-8 h-8 rounded-full' />
+            : (
+              <div className='w-8 h-8 bg-[#0d9488] rounded-full flex items-center justify-center text-white text-sm font-medium'>
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )
+          }
+          <span className='text-sm font-medium text-[#e2e2e2]'>{user.name}</span>
           <button
             onClick={handleLogout}
-            className='text-sm text-red-500 hover:underline'
+            className='text-sm font-medium text-[#c7c7c7] hover:text-red-400 transition-colors duration-200'
           >
             Logout
           </button>
@@ -139,19 +136,15 @@ const Dashboard = () => {
 
       <div className='flex flex-1 overflow-hidden'>
 
-        {/* Left Sidebar — Documents */}
-        <aside className='w-72 bg-white border-r p-4 flex flex-col gap-4 overflow-y-auto'>
-          <div>
-            <h2 className='text-sm font-semibold text-gray-700 mb-3'>
-              Your Documents
-            </h2>
+        {/* Sidebar */}
+        <aside className='w-64 bg-[#212121] border-r border-[#383838] flex flex-col overflow-y-auto'>
 
-            {/* Upload Button */}
+          {/* Upload */}
+          <div className='p-4 border-b border-[#383838]'>
             <label className={`
-              w-full flex items-center justify-center gap-2 
-              border-2 border-dashed border-blue-300 rounded-lg 
-              py-3 text-sm text-blue-500 cursor-pointer
-              hover:bg-blue-50 transition
+              block w-full text-center py-2 px-4 rounded-lg border border-dashed
+              border-[#383838] text-sm text-gray-300 cursor-pointer
+              hover:border-[#4a4a4a] hover:text-gray-200 transition
               ${uploading ? 'opacity-50 pointer-events-none' : ''}
             `}>
               <input
@@ -160,74 +153,79 @@ const Dashboard = () => {
                 onChange={handleUpload}
                 className='hidden'
               />
-              {uploading ? 'Uploading...' : '+ Upload PDF'}
+              {uploading ? 'Uploading...' : '📄 Upload PDF'}
             </label>
+
+            {error && (
+              <p className='text-xs text-red-400 mt-2'>{error}</p>
+            )}
           </div>
 
-          {/* Error */}
-          {error && (
-            <p className='text-xs text-red-500'>{error}</p>
-          )}
+          {/* Documents */}
+          <div className='p-4 flex-1'>
+            <p className='text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3'>
+              Documents
+            </p>
 
-          {/* Documents List */}
-          <div className='flex flex-col gap-2'>
             {documents.length === 0 ? (
-              <p className='text-xs text-gray-400 text-center mt-4'>
-                No documents yet — upload a PDF!
+              <p className='text-xs text-[#666666] text-center mt-6'>
+                No documents yet
               </p>
             ) : (
-              documents.map(doc => (
-                <div
-                  key={doc.id}
-                  className='bg-gray-50 rounded-lg p-3 flex items-start justify-between gap-2'
-                >
-                  <div className='flex-1 min-w-0'>
-                    <p className='text-xs font-medium text-gray-700 truncate'>
-                      {doc.fileName}
-                    </p>
-                    <p className='text-xs text-gray-400 mt-1'>
-                      {doc._count.chunks} chunks • {doc.status}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(doc.id)}
-                    className='text-xs text-red-400 hover:text-red-600 shrink-0'
+              <div className='flex flex-col gap-2'>
+                {documents.map(doc => (
+                  <div
+                    key={doc.id}
+                    className='flex items-start justify-between gap-2 p-2.5 rounded-lg hover:bg-[#333333] transition group'
                   >
-                    ✕
-                  </button>
-                </div>
-              ))
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-xs text-[#d4d4d4] truncate font-medium'>
+                        {doc.fileName}
+                      </p>
+                      <p className='text-xs text-[#8a8a8a] mt-0.5'>
+                        {doc._count.chunks} chunks
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      className='text-[#666666] hover:text-red-400 transition text-xs opacity-0 group-hover:opacity-100'
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Search History */}
-          <div className='mt-4'>
+          <div className='p-4 border-t border-[#383838]'>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className='w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-2'
+              className='flex items-center justify-between w-full text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3 hover:text-[#e8e8e8] transition-colors'
             >
-              <span>Search History</span>
+              <span>History</span>
               <span>{showHistory ? '▲' : '▼'}</span>
             </button>
 
             {showHistory && (
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-1'>
                 {history.length === 0 ? (
-                  <p className='text-xs text-gray-400 text-center'>
-                    No search history yet
+                  <p className='text-xs text-gray-600 text-center py-2'>
+                    No history yet
                   </p>
                 ) : (
                   history.map(item => (
                     <div
                       key={item.id}
-                      className='bg-gray-50 rounded-lg p-2 flex items-start justify-between gap-2 cursor-pointer hover:bg-blue-50 transition'
                       onClick={() => {
                         setQuery(item.query)
                         setAnswer(item.answer)
                         setSources([])
                       }}
+                      className='flex items-center justify-between gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-[#333333] transition group'
                     >
-                      <p className='text-xs text-gray-600 truncate flex-1'>
+                      <p className='text-xs text-gray-300 truncate flex-1'>
                         {item.query}
                       </p>
                       <button
@@ -235,7 +233,7 @@ const Dashboard = () => {
                           e.stopPropagation()
                           handleDeleteHistory(item.id)
                         }}
-                        className='text-xs text-red-400 hover:text-red-600 shrink-0'
+                        className='text-gray-600 hover:text-red-400 transition text-xs opacity-0 group-hover:opacity-100'
                       >
                         ✕
                       </button>
@@ -247,77 +245,87 @@ const Dashboard = () => {
           </div>
         </aside>
 
-        {/* Main Area — Search */}
-        <main className='flex-1 p-6 overflow-y-auto flex flex-col gap-6'>
+        {/* Main */}
+        <main className='flex-1 flex flex-col overflow-hidden'>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className='flex gap-2'>
-            <input
-              type='text'
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder='Ask anything from your documents...'
-              className='flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
-            />
-            <button
-              type='submit'
-              disabled={searching || !query.trim()}
-              className='bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition'
-            >
-              {searching ? 'Searching...' : 'Search'}
-            </button>
-          </form>
+          <div className='p-8 border-b border-[#303030]'>
+            <form onSubmit={handleSearch} className='flex gap-3'>
+              <input
+                type='text'
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder='Ask anything from your documents...'
+                className='flex-1 border border-[#383838] rounded-lg px-4 py-2.5 text-sm text-[#e8e8e8] placeholder-[#666666] focus:outline-none focus:border-[#0d9488] transition'
+              />
+              <button
+                type='submit'
+                disabled={searching || !query.trim()}
+                className='bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-medium transition'
+              >
+                {searching ? 'Searching...' : 'Search'}
+              </button>
+            </form>
+          </div>
 
-          {/* Answer */}
-          {answer && (
-            <div className='bg-white rounded-xl shadow-sm border p-5'>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                Answer
-              </h3>
-              <p className='text-sm text-gray-600 leading-relaxed whitespace-pre-wrap'>
-                {answer}
-              </p>
-            </div>
-          )}
+          {/* Results */}
+          <div className='flex-1 overflow-y-auto p-6 flex flex-col gap-5'>
 
-          {/* Sources */}
-          {sources.length > 0 && (
-            <div className='bg-white rounded-xl shadow-sm border p-5'>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
-                Sources
-              </h3>
-              <div className='flex flex-col gap-3'>
-                {sources.map((source, i) => (
-                  <div key={i} className='bg-gray-50 rounded-lg p-3'>
-                    <div className='flex items-center justify-between mb-1'>
-                      <p className='text-xs font-medium text-blue-600'>
-                        {source.fileName}
-                      </p>
-                      <span className='text-xs text-gray-400'>
-                        {Math.round(source.similarity * 100)}% match
-                      </span>
-                    </div>
-                    <p className='text-xs text-gray-500 leading-relaxed'>
-                      {source.content}...
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!answer && !searching && (
-            <div className='flex-1 flex items-center justify-center'>
-              <div className='text-center'>
-                <p className='text-4xl mb-3'>🔍</p>
-                <p className='text-gray-400 text-sm'>
-                  Upload a PDF and ask anything!
+            {/* Answer */}
+            {answer && (
+              <div className='bg-[#222222] rounded-xl border border-[#383838] p-5'>
+                <p className='text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3'>
+                  Answer
+                </p>
+                <p className='text-sm text-[#e8e8e8] leading-relaxed whitespace-pre-wrap'>
+                  {answer}
                 </p>
               </div>
-            </div>
-          )}
+            )}
 
+            {/* Sources */}
+            {sources.length > 0 && (
+              <div className='bg-[#2a2a2a] rounded-xl border border-[#383838] p-5'>
+                <p className='text-xs text-gray-500 font-medium uppercase tracking-wide mb-3'>
+                  Sources
+                </p>
+                <div className='flex flex-col gap-2'>
+                  {sources.map((source, i) => (
+                    <div
+                      key={i}
+                      className='border border-[#383838] rounded-lg p-3'
+                    >
+                      <div className='flex items-center justify-between mb-1'>
+                        <p className='text-xs font-medium text-teal-400 truncate'>
+                          {source.fileName}
+                        </p>
+                        <span className='text-xs text-gray-500 ml-3 shrink-0'>
+                          {Math.round(source.similarity * 100)}% match
+                        </span>
+                      </div>
+                      <p className='text-xs text-gray-500 leading-relaxed'>
+                        {source.content}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!answer && !searching && (
+              <div className='flex-1 flex flex-col items-center justify-start pt-40 text-center py-20'>
+                <FileText className="w-8 h-8 text-[#0d9488]" />
+                <p className='text-[#e8e8e8] text-sm font-medium'>
+                  Ask anything from your documents
+                </p>
+                <p className='text-[#a0a0a0] text-xs mt-1'>
+                  Upload a PDF to get started
+                </p>
+              </div>
+            )}
+
+          </div>
         </main>
       </div>
     </div>
