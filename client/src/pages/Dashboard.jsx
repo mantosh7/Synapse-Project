@@ -250,7 +250,7 @@ const Dashboard = () => {
         <main className='flex-1 flex flex-col overflow-hidden mr-32 ml-32'>
 
           {/* Search Bar */}
-          <div className='p-8 border-b border-[#303030]'>
+          <div className='px-2 py-8 border-b border-[#303030]'>
             <form onSubmit={handleSearch} className='flex gap-3'>
               <input
                 type='text'

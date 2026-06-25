@@ -16,7 +16,6 @@ const Register = () => {
     e.preventDefault()
     setError(null)
     setLoading(true)
-
     try {
       await api.post('/api/auth/register', formData)
       navigate('/dashboard')
@@ -27,7 +26,7 @@ const Register = () => {
     }
   }
 
-  // Google OAuth — same as login
+  // Google OAuth — same flow as login
   const handleGoogleLogin = () => {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
     const options = {
@@ -43,21 +42,34 @@ const Register = () => {
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-      <div className='bg-white p-8 rounded-xl shadow-md w-full max-w-md'>
-        <h1 className='text-2xl font-bold text-gray-800 mb-6'>
-          Create your Synapse account
-        </h1>
+    <div className='min-h-screen bg-[#161616] flex items-center justify-center px-4'>
+      <div className='w-full max-w-sm'>
 
+        {/* Logo */}
+        <div className='flex items-center gap-2 mb-8'>
+          <div className='w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-sm'>
+            S
+          </div>
+          <span className='text-white font-semibold text-base'>Synapse</span>
+        </div>
+
+        <h1 className='text-xl font-semibold text-white mb-1'>
+          Create an account
+        </h1>
+        <p className='text-sm text-gray-400 mb-6'>
+          Start searching your documents
+        </p>
+
+        {/* Error message */}
         {error && (
-          <div className='bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm'>
+          <div className='bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm'>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm text-gray-400 mb-1.5'>
               Name
             </label>
             <input
@@ -66,13 +78,13 @@ const Register = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              className='w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
               placeholder='Your name'
+              className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
             />
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm text-gray-400 mb-1.5'>
               Email
             </label>
             <input
@@ -81,13 +93,13 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className='w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
               placeholder='you@example.com'
+              className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
             />
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm text-gray-400 mb-1.5'>
               Password
             </label>
             <input
@@ -96,29 +108,31 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className='w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
               placeholder='••••••••'
+              className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
             />
           </div>
 
           <button
             type='submit'
             disabled={loading}
-            className='w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition'
+            className='w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition'
           >
-            {loading ? 'Creating account...' : 'Register'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <div className='flex items-center my-4'>
-          <hr className='flex-1 border-gray-200' />
-          <span className='px-3 text-xs text-gray-400'>OR</span>
-          <hr className='flex-1 border-gray-200' />
+        {/* Divider */}
+        <div className='flex items-center gap-3 my-5'>
+          <hr className='flex-1 border-gray-600' />
+          <span className='text-xs text-gray-400'>or</span>
+          <hr className='flex-1 border-gray-600' />
         </div>
 
+        {/* Google login */}
         <button
           onClick={handleGoogleLogin}
-          className='w-full border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2'
+          className='w-full hover:bg-[#222222] border border-gray-700 text-gray-300 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2'
         >
           <img
             src='https://www.google.com/favicon.ico'
@@ -128,12 +142,13 @@ const Register = () => {
           Continue with Google
         </button>
 
-        <p className='text-center text-sm text-gray-500 mt-6'>
+        <p className='text-center text-sm text-gray-400 mt-6'>
           Already have an account?{' '}
-          <Link to='/' className='text-blue-600 hover:underline'>
+          <Link to='/' className='text-teal-400 hover:text-teal-300 transition'>
             Login
           </Link>
         </p>
+
       </div>
     </div>
   )
