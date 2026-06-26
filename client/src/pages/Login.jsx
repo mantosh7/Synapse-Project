@@ -43,98 +43,105 @@ const Login = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[#161616] flex items-center justify-center px-4'>
-      <div className='w-full max-w-sm'>
+    <div className='min-h-screen bg-[#161616] px-12 py-4'>
 
-        {/* Logo */}
-        <div className='flex items-center gap-2 mb-8'>
-          <div className='w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-sm'>
-            S
-          </div>
-          <span className='text-white font-semibold text-base'>Synapse</span>
+      {/* Logo */}
+      <div className="flex items-center cursor-pointer " onClick={() => navigate("/")}>
+        <img src="/logos/logo.png" className="w-20 h-20 text-white" />
+        <div className="">
+          <p className="text-lg font-semibold text-white">
+            Synapse
+          </p>
+          <p className="text-xs text-[#a8a8a8] mb-1">
+            PDF Assistant
+          </p>
         </div>
+      </div>
 
-        <h1 className='text-xl font-semibold text-white mb-1'>
-          Welcome back
-        </h1>
-        <p className='text-sm text-gray-400 mb-6'>
-          Login to your account
-        </p>
+      {/* Form */}
+      <div className='flex items-center justify-center min-h-[calc(100vh-60px)]'>
+        <div className='w-full max-w-sm mb-20'>
+          <h1 className='text-xl font-semibold text-white mb-1'>
+            Welcome back
+          </h1>
+          <p className='text-sm text-gray-400 mb-6'>
+            Login to your account
+          </p>
 
-        {/* Error message */}
-        {error && (
-          <div className='bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm'>
-            {error}
+          {/* Error message */}
+          {error && (
+            <div className='bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm'>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            <div>
+              <label className='block text-sm text-gray-400 mb-1.5'>
+                Email
+              </label>
+              <input
+                type='email'
+                name='email'
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder='you@example.com'
+                className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
+              />
+            </div>
+
+            <div>
+              <label className='block text-sm text-gray-400 mb-1.5'>
+                Password
+              </label>
+              <input
+                type='password'
+                name='password'
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder='••••••••'
+                className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
+              />
+            </div>
+
+            <button
+              type='submit'
+              disabled={loading}
+              className='w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition'
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className='flex items-center gap-3 my-5'>
+            <hr className='flex-1 border-gray-600' />
+            <span className='text-xs text-gray-400'>or</span>
+            <hr className='flex-1 border-gray-600' />
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div>
-            <label className='block text-sm text-gray-400 mb-1.5'>
-              Email
-            </label>
-            <input
-              type='email'
-              name='email'
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder='you@example.com'
-              className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm text-gray-400 mb-1.5'>
-              Password
-            </label>
-            <input
-              type='password'
-              name='password'
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder='••••••••'
-              className='w-full border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-teal-500 transition'
-            />
-          </div>
-
+          {/* Google login */}
           <button
-            type='submit'
-            disabled={loading}
-            className='w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition'
+            onClick={handleGoogleLogin}
+            className='w-full hover:bg-[#1E1E1E] border border-gray-700 text-gray-300 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2'
           >
-            {loading ? 'Logging in...' : 'Login'}
+            <img
+              src='/logos/google.png'
+              alt='Google'
+              className='w-4 h-4'
+            />
+            Continue with Google
           </button>
-        </form>
 
-        {/* Divider */}
-        <div className='flex items-center gap-3 my-5'>
-          <hr className='flex-1 border-gray-600' />
-          <span className='text-xs text-gray-400'>or</span>
-          <hr className='flex-1 border-gray-600' />
+          <p className='text-center text-sm text-gray-400 mt-6'>
+            Don't have an account?{' '}
+            <Link to='/register' className='text-teal-400 hover:text-teal-300 transition'>
+              Register
+            </Link>
+          </p>
         </div>
-
-        {/* Google login */}
-        <button
-          onClick={handleGoogleLogin}
-          className='w-full hover:bg-[#222222] border border-gray-700 text-gray-300 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2'
-        >
-          <img
-            src='https://www.google.com/favicon.ico'
-            alt='Google'
-            className='w-4 h-4'
-          />
-          Continue with Google
-        </button>
-
-        <p className='text-center text-sm text-gray-400 mt-6'>
-          Don't have an account?{' '}
-          <Link to='/register' className='text-teal-400 hover:text-teal-300 transition'>
-            Register
-          </Link>
-        </p>
-
       </div>
     </div>
   )

@@ -95,7 +95,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     await api.post('/api/auth/logout')
-    navigate('/')
+    navigate('/login')
   }
 
   if (!user) return (
@@ -108,12 +108,10 @@ const Dashboard = () => {
     <div className='min-h-screen bg-[#1a1a1a] text-[#e8e8e8] flex flex-col'>
 
       {/* Navbar */}
-      <nav className='bg-[#212121] border-b border-[#383838] px-6 py-4 flex items-center justify-between'>
-        <div className='flex items-center gap-3'>
-          <div className="w-10 h-10 bg-[#0d9488] rounded-lg flex items-center justify-center">
-            <Network className="w-5 h-5 text-white" />
-          </div>
-          <span className='text-white font-semibold text-base'>Synapse</span>
+      <nav className='bg-[#212121] border-b border-[#383838] px-6 py-0 flex items-center justify-between'>
+        <div className='flex items-center ml-4'>
+          <img src="/logos/logo.png" className="w-18 h-18 text-white" />
+          <span className='text-white text-lg font-semibold text-base ml-[-4px]'>Synapse</span>
         </div>
 
         <div className='flex items-center gap-4 mr-8'>
