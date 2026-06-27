@@ -92,7 +92,7 @@ const searchDocuments = async (query, userId) => {
     answer,
     sources: uniqueChunks.map(chunk => ({
       fileName: chunk.file_name,
-      content: chunk.content.substring(0, 200),
+      content: chunk.content,
       similarity: parseFloat(chunk.similarity).toFixed(3)
     }))
   }

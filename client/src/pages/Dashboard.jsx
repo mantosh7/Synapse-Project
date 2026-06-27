@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Network } from 'lucide-react'
-import AnswerRenderer from '../components/AnswerRenderer'
+import Sidebar from '../components/Sidebar.jsx'
+import AnswerRenderer from '../components/AnswerRenderer.jsx'
+import SourceModal from '../components/SourceModal.jsx'
 import api from '../services/api.js'
 
 const Dashboard = () => {
@@ -136,113 +138,22 @@ const Dashboard = () => {
       <div className='flex flex-1 overflow-hidden'>
 
         {/* Sidebar */}
-        <aside className='w-64 bg-[#212121] border-r border-[#383838] flex flex-col overflow-y-auto'>
-
-          {/* Upload */}
-          <div className='p-4 border-b border-[#383838]'>
-            <label className={`
-              block w-full text-center py-2 px-4 rounded-lg border border-dashed
-              border-[#383838] text-sm text-gray-300 cursor-pointer
-              hover:border-[#4a4a4a] hover:text-gray-200 transition
-              ${uploading ? 'opacity-50 pointer-events-none' : ''}
-            `}>
-              <input
-                type='file'
-                accept='.pdf'
-                onChange={handleUpload}
-                className='hidden'
-              />
-              {uploading ? 'Uploading...' : '📄 Upload PDF'}
-            </label>
-
-            {error && (
-              <p className='text-xs text-red-400 mt-2'>{error}</p>
-            )}
-          </div>
-
-          {/* Documents */}
-          <div className='p-4 flex-1'>
-            <p className='text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3'>
-              Documents
-            </p>
-
-            {documents.length === 0 ? (
-              <p className='text-xs text-[#666666] text-center mt-6'>
-                No documents yet
-              </p>
-            ) : (
-              <div className='flex flex-col gap-2'>
-                {documents.map(doc => (
-                  <div
-                    key={doc.id}
-                    className='flex items-start justify-between gap-2 p-2.5 rounded-lg hover:bg-[#333333] transition group'
-                  >
-                    <div className='flex-1 min-w-0'>
-                      <p className='text-xs text-[#d4d4d4] truncate font-medium'>
-                        {doc.fileName}
-                      </p>
-                      <p className='text-xs text-[#8a8a8a] mt-0.5'>
-                        {doc._count.chunks} chunks
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(doc.id)}
-                      className='text-[#666666] hover:text-red-400 transition text-xs opacity-0 group-hover:opacity-100'
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Search History */}
-          <div className='p-4 border-t border-[#383838]'>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className='flex items-center justify-between w-full text-xs text-[#a0a0a0] font-medium uppercase tracking-wide mb-3 hover:text-[#e8e8e8] transition-colors'
-            >
-              <span>History</span>
-              <span>{showHistory ? '▲' : '▼'}</span>
-            </button>
-
-            {showHistory && (
-              <div className='flex flex-col gap-1'>
-                {history.length === 0 ? (
-                  <p className='text-xs text-gray-600 text-center py-2'>
-                    No history yet
-                  </p>
-                ) : (
-                  history.map(item => (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setQuery(item.query)
-                        setAnswer(item.answer)
-                        setSources([])
-                      }}
-                      className='flex items-center justify-between gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-[#333333] transition group'
-                    >
-                      <p className='text-xs text-gray-300 truncate flex-1'>
-                        {item.query}
-                      </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteHistory(item.id)
-                        }}
-                        className='text-gray-600 hover:text-red-400 transition text-xs opacity-0 group-hover:opacity-100'
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        </aside>
+        <Sidebar
+          documents={documents}
+          uploading={uploading}
+          error={error}
+          history={history}
+          showHistory={showHistory}
+          onUpload={handleUpload}
+          onDelete={handleDelete}
+          onDeleteHistory={handleDeleteHistory}
+          onToggleHistory={() => setShowHistory(!showHistory)}
+          onHistoryClick={(item) => {
+            setQuery(item.query)
+            setAnswer(item.answer)
+            setSources([])
+          }}
+        />
 
         {/* Main */}
         <main className='flex-1 flex flex-col overflow-hidden mr-32 ml-32'>
@@ -281,33 +192,7 @@ const Dashboard = () => {
             )}
 
             {/* Sources */}
-            {sources.length > 0 && (
-              <div className='bg-[#2a2a2a] rounded-xl border border-[#383838] p-5'>
-                <p className='text-xs text-gray-500 font-medium uppercase tracking-wide mb-3'>
-                  Sources
-                </p>
-                <div className='flex flex-col gap-2'>
-                  {sources.map((source, i) => (
-                    <div
-                      key={i}
-                      className='border border-[#383838] rounded-lg p-3'
-                    >
-                      <div className='flex items-center justify-between mb-1'>
-                        <p className='text-xs font-medium text-teal-400 truncate'>
-                          {source.fileName}
-                        </p>
-                        <span className='text-xs text-[#d4d4d4] ml-3 shrink-0'>
-                          {Math.round(source.similarity * 100)}% match
-                        </span>
-                      </div>
-                      <p className='text-xs text-[#a0a0a0] leading-relaxed'>
-                        {source.content}...
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <SourceModal sources={sources} />
 
             {/* Empty State */}
             {!answer && !searching && (
