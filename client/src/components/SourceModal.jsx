@@ -1,3 +1,5 @@
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useState } from 'react'
 
 const SourceModal = ({ sources }) => {
@@ -33,13 +35,13 @@ const SourceModal = ({ sources }) => {
 
             {/* Preview */}
             <p className='text-xs text-[#a0a0a0] leading-relaxed'>
-              {source.content.substring(0, 150)}...
+              {source.content.replace(/[#*`_~]/g, '').substring(0, 150)}...
             </p>
 
             {/* Full content */}
             {expandedIndex === i && (
               <div className='mt-3 pt-3 border-t border-[#383838]'>
-                <p className='text-xs text-[#d4d4d4] leading-relaxed whitespace-pre-wrap'>
+                <p className='text-xs text-[#d4d4d4] leading-loose whitespace-pre-wrap'>
                   {source.content}
                 </p>
               </div>
