@@ -6,58 +6,84 @@ const pageTitleEl = document.getElementById('page-title')
 const saveBtnEl = document.getElementById('save-btn')
 const statusEl = document.getElementById('status')
 const openSynapseEl = document.getElementById('open-synapse')
+const loginBtnEl = document.getElementById('login-btn')
+const emailEl = document.getElementById('email')
+const passwordEl = document.getElementById('password')
+const loginStatusEl = document.getElementById('login-status')
 
-// backend URL
 const SYNAPSE_URL = 'https://synapse-project-pi.vercel.app'
 
-// show the required UI state
+// Show one state at a time — loading, not-logged-in, logged-in
 const showState = (state) => {
-    // dide all sections first
     loadingEl.style.display = 'none'
     notLoggedInEl.style.display = 'none'
     loggedInEl.style.display = 'none'
 
-    // display the requested section
     if (state === 'loading') loadingEl.style.display = 'block'
     if (state === 'not-logged-in') notLoggedInEl.style.display = 'block'
     if (state === 'logged-in') loggedInEl.style.display = 'block'
 }
 
-// display a status message
+// Show status message with type — success or error
 const showStatus = (message, type) => {
     statusEl.textContent = message
-    statusEl.className = `status ${type}` // Apply success or error styling
+    statusEl.className = `status ${type}`
 }
 
-// get the currently active browser tab
+// Get the current active tab
 const getCurrentTab = async () => {
-    const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
-    })
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
     return tabs[0]
 }
 
-// open Synapse in a new tab
+// Open Synapse website in new tab
 openSynapseEl.addEventListener('click', () => {
     chrome.tabs.create({ url: SYNAPSE_URL })
 })
 
-// handle Save button click
+// Login button click — send credentials to background
+loginBtnEl.addEventListener('click', async () => {
+    const email = emailEl.value.trim()
+    const password = passwordEl.value.trim()
+
+    if (!email || !password) {
+        loginStatusEl.textContent = 'Please fill all fields'
+        loginStatusEl.className = 'status error'
+        return
+    }
+
+    loginBtnEl.disabled = true
+    loginStatusEl.textContent = 'Logging in...'
+    loginStatusEl.className = 'status'
+
+    const result = await chrome.runtime.sendMessage({
+        type: 'LOGIN',
+        data: { email, password }
+    })
+
+    if (result.success) {
+        init() // Refresh popup after login
+    } else {
+        loginStatusEl.textContent = result.message
+        loginStatusEl.className = 'status error'
+        loginBtnEl.disabled = false
+    }
+})
+
+// Save button click — get page content and send to backend
 saveBtnEl.addEventListener('click', async () => {
     saveBtnEl.disabled = true
     showStatus('Saving...', '')
 
     try {
-        // get the current tab
         const tab = await getCurrentTab()
 
-        // request page content from the content script
+        // Ask content script for page content
         const content = await chrome.tabs.sendMessage(tab.id, {
             type: 'GET_CONTENT'
         })
 
-        // ask the background script to save the content
+        // Send content to background to save
         const result = await chrome.runtime.sendMessage({
             type: 'SAVE_PAGE',
             data: content
@@ -70,35 +96,28 @@ saveBtnEl.addEventListener('click', async () => {
         }
 
     } catch (err) {
-        // handle unexpected errors
         showStatus('Something went wrong', 'error')
     } finally {
-        // re-enable the Save button
         saveBtnEl.disabled = false
     }
 })
 
-// initialize the popup
+// Init — check auth and show correct state
 const init = async () => {
-    // show loading state
     showState('loading')
 
-    // check whether the user is authenticated
-    const auth = await chrome.runtime.sendMessage({
-        type: 'CHECK_AUTH'
-    })
+    const auth = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' })
 
     if (!auth.loggedIn) {
         showState('not-logged-in')
         return
     }
 
-    // display the current page title
+    // Show current page title
     const tab = await getCurrentTab()
     pageTitleEl.textContent = tab.title || 'Current page'
 
     showState('logged-in')
 }
 
-// initialize the popup when it loads
 init()

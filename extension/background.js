@@ -9,6 +9,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true   // keep channel open for async response
     }
 
+    // for login
+    if (message.type === 'LOGIN') {
+        loginUser(message.data).then(sendResponse)
+        return true
+    }
+
     // popup wants to save the current page
     if (message.type === 'SAVE_PAGE') {
         savePage(message.data).then(sendResponse)
@@ -17,7 +23,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 })
 
-// Check if a token exists
+// Check if user is logged in by verifying token with backend
 const checkAuth = async () => {
     const result = await chrome.storage.local.get('token')
 
@@ -25,7 +31,6 @@ const checkAuth = async () => {
         return { loggedIn: false }
     }
 
-    // Token exists — verify it with the backend
     try {
         const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
             headers: {
@@ -38,7 +43,7 @@ const checkAuth = async () => {
             return { loggedIn: true, user: data.data.user }
         }
 
-        // Token is invalid — remove it
+        // Token invalid — remove it
         await chrome.storage.local.remove('token')
         return { loggedIn: false }
 
@@ -47,7 +52,34 @@ const checkAuth = async () => {
     }
 }
 
-// Save page content to the backend
+// Login user and save token to chrome.storage
+const loginUser = async ({ email, password }) => {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-client-type': 'extension' // tells backend to send token in response body
+            },
+            body: JSON.stringify({ email, password })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            return { success: false, message: data.message || 'Login failed' }
+        }
+
+        // Save token to extension storage
+        await chrome.storage.local.set({ token: data.data.token })
+        return { success: true }
+
+    } catch (err) {
+        return { success: false, message: 'Connection error' }
+    }
+}
+
+// Save page content to Synapse backend
 const savePage = async (data) => {
     const result = await chrome.storage.local.get('token')
 

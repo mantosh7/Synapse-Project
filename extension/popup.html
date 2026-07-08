@@ -152,10 +152,19 @@
     <!-- content -->
     <div class="content">
 
-        <!-- not logged in — by default hidden -->
-        <div id="not-logged-in" class="not-logged-in" style="display:none">
-            <p>Login to Synapse to save pages</p>
-            <button class="btn-secondary" id="open-synapse">Open Synapse</button>
+        <!-- Not logged in — show login form -->
+        <div id="not-logged-in" style="display:none">
+            <p style="color:#a0a0a0; font-size:13px; margin-bottom:12px">
+                Login to save pages
+            </p>
+            <input type="email" id="email" placeholder="Email" style="width:100%; background:#2a2a2a; border:1px solid #383838;
+           border-radius:8px; padding:8px 12px; color:#e8e8e8;
+           font-size:13px; margin-bottom:8px; outline:none; box-sizing:border-box" />
+            <input type="password" id="password" placeholder="Password" style="width:100%; background:#2a2a2a; border:1px solid #383838;
+           border-radius:8px; padding:8px 12px; color:#e8e8e8;
+           font-size:13px; margin-bottom:12px; outline:none; box-sizing:border-box" />
+            <button class="btn-primary" id="login-btn">Login</button>
+            <p class="status" id="login-status"></p>
         </div>
 
         <!-- logged in state — by default hidden -->
