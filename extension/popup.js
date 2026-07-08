@@ -5,7 +5,6 @@ const loggedInEl = document.getElementById('logged-in')
 const pageTitleEl = document.getElementById('page-title')
 const saveBtnEl = document.getElementById('save-btn')
 const statusEl = document.getElementById('status')
-const openSynapseEl = document.getElementById('open-synapse')
 const loginBtnEl = document.getElementById('login-btn')
 const emailEl = document.getElementById('email')
 const passwordEl = document.getElementById('password')
@@ -36,10 +35,6 @@ const getCurrentTab = async () => {
     return tabs[0]
 }
 
-// Open Synapse website in new tab
-openSynapseEl.addEventListener('click', () => {
-    chrome.tabs.create({ url: SYNAPSE_URL })
-})
 
 // Login button click — send credentials to background
 loginBtnEl.addEventListener('click', async () => {
