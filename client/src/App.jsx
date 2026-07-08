@@ -11,7 +11,7 @@ const App = () => {
   return (
     <Routes>
       {/* Guest only — logged in user goes to dashboard */}
-      <Route path='/' element={<Landing />} />
+      <Route path='/' element={<GuestRoute><Landing /></GuestRoute>} />
       <Route path='/login' element={<GuestRoute> <Login /> </GuestRoute>} />
       <Route path='/register' element={<GuestRoute> <Register /> </GuestRoute>} />
 
