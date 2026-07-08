@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import multer from 'multer'
 import path from 'path'
-import { upload, getDocuments, remove } from '../controllers/documentController.js'
+import { upload, getDocuments, remove, saveWeb } from '../controllers/documentController.js'
 import { protect } from '../middlewares/authMiddleware.js'
 
 // Multer config — where to save files
@@ -38,8 +38,12 @@ const router = Router()
 // All routes protected — login required
 router.use(protect)
 
+// Web content save — from extension
+router.post('/web', saveWeb)
+
 router.post('/', uploadMiddleware.single('pdf'), upload)
 router.get('/', getDocuments)
 router.delete('/:id', remove)
+
 
 export default router

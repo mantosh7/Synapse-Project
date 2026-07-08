@@ -1,4 +1,4 @@
-import { uploadDocument, getUserDocuments, deleteDocument } from '../services/documentService.js'
+import { uploadDocument, getUserDocuments, deleteDocument, saveWebContent } from '../services/documentService.js'
 
 // Handle PDF upload
 const upload = async (req, res, next) => {
@@ -11,6 +11,34 @@ const upload = async (req, res, next) => {
         }
 
         const result = await uploadDocument(req.file, req.user.id)
+
+        res.status(201).json({
+            status: 'success',
+            data: result
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+// Handle web page save from extension
+const saveWeb = async (req, res, next) => {
+    try {
+        const { title, content, url } = req.body
+
+        if (!content) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'No content provided'
+            })
+        }
+
+        const result = await saveWebContent({
+            title,
+            content,
+            url,
+            userId: req.user.id
+        })
 
         res.status(201).json({
             status: 'success',
@@ -49,4 +77,4 @@ const remove = async (req, res, next) => {
     }
 }
 
-export { upload, getDocuments, remove }
+export { upload, getDocuments, remove, saveWeb }

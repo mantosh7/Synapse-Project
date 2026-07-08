@@ -23,14 +23,21 @@ const app = express()
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigin = process.env.CLIENT_URL?.replace(/\/$/, '')
-    if (!origin || origin.replace(/\/$/, '') === allowedOrigin) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
+
+    // No origin — same origin request
+    if (!origin) return callback(null, true)
+
+    // allow Chrome extension origin
+    if (origin.startsWith('chrome-extension://')) return callback(null, true)
+
+    // Frontend URL allow 
+    if (origin.replace(/\/$/, '') === allowedOrigin) return callback(null, true)
+
+    callback(new Error('Not allowed by CORS'))
   },
   credentials: true
 }))
+
 app.use(express.json())
 app.use(cookieParser())
 

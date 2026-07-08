@@ -5,6 +5,65 @@ import { extractText } from 'unpdf'
 import fs from 'fs'
 import AppError from '../middlewares/AppError.js'
 
+// Save web page content from Chrome Extension
+const saveWebContent = async ({ title, content, url, userId }) => {
+
+    // Validate page content
+    if (!content || content.trim().length === 0) {
+        throw new AppError('No content found on this page', 400)
+    }
+
+    // Create a document record
+    const document = await prisma.document.create({
+        data: {
+            userId,
+            fileName: title || 'Untitled Page',
+            filePath: url,       // Store page URL
+            fileSize: content.length,
+            status: 'processing'
+        }
+    })
+
+    // split text into chunks
+    const chunks = chunkText(content)
+
+    // for each chunk: save + generate embedding + store vector
+    for (const chunk of chunks) {
+
+        // Store chunk in database
+        const savedChunk = await prisma.chunk.create({
+            data: {
+                docId: document.id,
+                content: chunk.content,
+                chunkIndex: chunk.chunkIndex
+            }
+        })
+
+        // generate embedding for chunk
+        const embedding = await generateEmbedding(chunk.content)
+
+        // store embedding vector in pgvector table using raw SQL
+        await prisma.$executeRaw`
+        INSERT INTO embeddings (id, chunk_id, embedding)
+        VALUES (gen_random_uuid(), ${savedChunk.id}, ${JSON.stringify(embedding)}::vector)
+        `
+    }
+
+    // update document status to completed
+    await prisma.document.update({
+        where: { id: document.id },
+        data: { status: 'completed' }
+    })
+
+    // Return upload summary
+    return {
+        id: document.id,
+        fileName: document.fileName,
+        totalChunks: chunks.length,
+        status: 'completed'
+    }
+}
+
 // upload and process PDF — full pipeline
 const uploadDocument = async (file, userId) => {
     try {
@@ -44,7 +103,7 @@ const uploadDocument = async (file, userId) => {
             // generate embedding for chunk
             const embedding = await generateEmbedding(chunk.content)
 
-            // store embedding vector using raw SQL — pgvector
+            // store embedding vector in pgvector table using raw SQL
             await prisma.$executeRaw`
             INSERT INTO embeddings (id, chunk_id, embedding)
             VALUES (gen_random_uuid(), ${savedChunk.id}, ${JSON.stringify(embedding)}::vector)
@@ -57,6 +116,7 @@ const uploadDocument = async (file, userId) => {
             data: { status: 'completed' }
         })
 
+        // Return upload summary
         return {
             id: document.id,
             fileName: document.fileName,
@@ -113,4 +173,4 @@ const deleteDocument = async (documentId, userId) => {
     return { message: 'Document deleted successfully' }
 }
 
-export { uploadDocument, getUserDocuments, deleteDocument }
+export { uploadDocument, getUserDocuments, deleteDocument, saveWebContent }

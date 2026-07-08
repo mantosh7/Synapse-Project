@@ -4,8 +4,9 @@ import AppError from './AppError.js'
 // Verify JWT token from cookie
 const protect = async (req, res, next) => {
   try {
-    // Read token from cookie instead of header
-    const token = req.cookies?.token
+    // Read token from cookie (in case of pdf) and header (in case of extension)
+    const token = req.cookies?.token ||
+      req.headers.authorization?.split(' ')[1]
 
     if (!token) {
       throw new AppError('Access denied. Please login.', 401)
