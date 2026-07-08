@@ -12,7 +12,16 @@ const register = async (req, res, next) => {
     const { name, email, password } = req.body
     const { token, user } = await registerUser({ name, email, password })
     res.cookie('token', token, cookieOptions)
-    res.status(201).json({ status: 'success', data: { user } })
+
+    const isExtension = req.headers['x-client-type'] === 'extension' // // send token in body only if request is from extension
+    
+    res.status(201).json({ 
+      status: 'success',
+      data: { 
+        user, 
+        ...(isExtension && { token }) 
+      } 
+    })
   } catch (err) {
     next(err)
   }
@@ -23,7 +32,16 @@ const login = async (req, res, next) => {
     const { email, password } = req.body
     const { token, user } = await loginUser({ email, password })
     res.cookie('token', token, cookieOptions)
-    res.status(200).json({ status: 'success', data: { user } })
+    
+    const isExtension = req.headers['x-client-type'] === 'extension' // send token in body only if request is from extension
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user,
+        ...(isExtension && { token })
+      }
+    })
   } catch (err) {
     next(err)
   }
