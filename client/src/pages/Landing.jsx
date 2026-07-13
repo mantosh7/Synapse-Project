@@ -201,7 +201,7 @@ const Landing = () => {
 
                         {/* Right */}
                         <div className="flex items-center gap-8">
-                            <a
+                            {/* <a
                                 href="https://github.com/mantosh7/Synapse-Project"
                                 target="_blank"
                                 rel="noreferrer"
@@ -212,7 +212,7 @@ const Landing = () => {
                                         className="w-8 h-8" />
                                     <div className="mt-1">GitHub</div>
                                 </div>
-                            </a>
+                            </a> */}
                             <p className="text-sm text-[#a8a8a8]">
                                 © 2026 Synapse
                             </p>
